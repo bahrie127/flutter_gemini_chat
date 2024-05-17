@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 import 'widgets/chat_bubble.dart';
+
+const apiKey = 'AIzaSyAsM7WdFtuMOhvwuODMOUrtFBq2dXIFl1M';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -11,6 +14,23 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+  TextEditingController messageController = TextEditingController();
+
+  // final prompt = 'Write a story about a magic backpack.';
+  // final content = [Content.text(prompt)];
+  // final response = await model.generateContent(content);
+
+  bool isLoading = false;
+
+  List<ChatBubble> chatBubbles = [
+    const ChatBubble(
+      direction: Direction.left,
+      message: 'Halo, saya Hera AI. Ada yang bisa saya bantu?',
+      photoUrl: 'https://i.pravatar.cc/150?img=47',
+      type: BubbleType.alone,
+    ),
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +42,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Rozak', style: TextStyle(color: Colors.white)),
+        title: const Text('Hera AI', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blueGrey,
       ),
       body: Column(
@@ -33,58 +53,63 @@ class _ChatPageState extends State<ChatPage> {
                   parent: BouncingScrollPhysics()),
               reverse: true,
               padding: const EdgeInsets.all(10),
-              children: const [
-                // Chat room messages here
-                ChatBubble(
-                  direction: Direction.left,
-                  message: 'Haloooo',
-                  photoUrl: null,
-                  type: BubbleType.alone,
-                ),
-                ChatBubble(
-                  direction: Direction.right,
-                  message: 'Haloooo',
-                  photoUrl: null,
-                  type: BubbleType.alone,
-                ),
-                ChatBubble(
-                  direction: Direction.left,
-                  message: 'Haloooo',
-                  photoUrl: null,
-                  type: BubbleType.alone,
-                ),
-                ChatBubble(
-                  direction: Direction.right,
-                  message: 'Haloooo',
-                  photoUrl: null,
-                  type: BubbleType.alone,
-                ),
-                ChatBubble(
-                  direction: Direction.left,
-                  message: 'Haloooo',
-                  photoUrl: null,
-                  type: BubbleType.alone,
-                )
-              ],
+              children: chatBubbles.reversed.toList(),
             ),
           ),
           Container(
             padding: const EdgeInsets.all(10),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: messageController,
+                    decoration: const InputDecoration(
                       hintText: 'Type a message...',
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () {
-                    // Send message logic here
-                  },
-                ),
+                isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () async {
+                          setState(() {
+                            isLoading = true;
+                          });
+                          final content = [
+                            Content.text(messageController.text)
+                          ];
+                          final GenerateContentResponse response =
+                              await model.generateContent(content);
+                          print(response.text);
+                          setState(() {
+                            chatBubbles = [
+                              ...chatBubbles,
+                              ChatBubble(
+                                direction: Direction.right,
+                                message: messageController.text,
+                                photoUrl: null,
+                                type: BubbleType.alone,
+                              )
+                            ];
+                            chatBubbles = [
+                              ...chatBubbles,
+                              ChatBubble(
+                                direction: Direction.left,
+                                message: response.text ??
+                                    'Maaf, saya tidak mengerti',
+                                photoUrl: 'https://i.pravatar.cc/150?img=47',
+                                type: BubbleType.alone,
+                              )
+                            ];
+
+                            messageController.clear();
+                            isLoading = false;
+                          });
+                        },
+                      ),
               ],
             ),
           ),

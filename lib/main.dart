@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trial_chat/pages/chat_page.dart';
 import 'package:trial_chat/pages/register_page.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const RegisterPage(),
+      home: const ChatPage(),
     );
   }
 }
